@@ -4,12 +4,20 @@
 
 Ce projet vise à créer une **version simple et fonctionnelle du jeu Pong** en **HTML/CSS/JavaScript vanille** (sans dépendances externes). 
 
+### Versions disponibles
+
+| Fichier | Description |
+|---------|-------------|
+| **pong.html** | Version basique avec contrôles au clavier |
+| **pong_advanced.html** 🆕 | Version avancée avec menu et contrôles molette |
+
 ### Buts pédagogiques
 - Comprendre la **boucle de jeu** (`requestAnimationFrame`)
 - Maîtriser le **rendu 2D** avec l'API Canvas
 - Implémenter la **détection de collisions**
-- Gérer les **entrées utilisateur** (clavier)
+- Gérer les **entrées utilisateur** (clavier et molette)
 - Organiser le code de manière **propre et maintenable**
+- Créer une **interface utilisateur interactive** avec menu
 
 ### Public cible
 - Développeurs front-end débutants
@@ -20,21 +28,42 @@ Ce projet vise à créer une **version simple et fonctionnelle du jeu Pong** en 
 
 ## 🎯 Fonctionnalités
 
-✅ **Jeu complet et jouable**
+### Jeu de base ✅
 - Balle qui se déplace et rebondit
 - Deux raquettes : joueur (gauche) et IA (droite)
 - Système de score automatique
 - Remise en jeu après chaque point
 
-✅ **Jouabilité fluide**
+### Jouabilité fluide ✅
 - Boucle de jeu à ~60 FPS
 - Mouvements lisses et réactifs
 - IA simple mais crédible
 
-✅ **Design minimaliste**
+### Design minimaliste ✅
 - Gradient violet moderne
 - Thème sombre (fond noir du jeu)
 - Interface intuitive et épurée
+
+### Nouvelles fonctionnalités (Version Avancée) 🆕
+
+#### 🎮 Menu Principal Interactif
+- Écran d'accueil avec sélection de paramètres
+- Transitions fluides (fade-in/out)
+- Design glassmorphism moderne
+
+#### ⌨️ Trois modes de contrôle
+1. **Flèches Haut/Bas** - Contrôle précis au clavier
+2. **Molette de Souris** 🖱️ - Contrôle intuitif par scroll
+3. **Mode Hybride** - Utilisez flèches OU molette au choix
+
+#### ⚙️ Sélecteur de Difficulté
+- **Facile (🐢)** - IA à 3.5 px/frame
+- **Normal (🎯)** - IA à 4.5 px/frame (défaut)
+- **Difficile (🐇)** - IA à 5.5 px/frame
+
+#### 🎯 Affichage des paramètres
+- Les contrôles choisis sont affichés en jeu
+- Info sur la difficulté sélectionnée
 
 ---
 
@@ -61,16 +90,55 @@ pong.html
 
 ## ⌨️ Commandes de Jeu
 
+### Menu Principal (Version Avancée)
+
+| Action | Étape |
+|--------|-------|
+| **Choisir contrôles** | Cliquer sur une option (Flèches/Molette/Hybride) |
+| **Régler difficulté** | Glisser le curseur (Facile ↔ Difficile) |
+| **Lancer le jeu** | Cliquer sur le bouton "▶️ JOUER" |
+
 ### Contrôles en jeu
 
+#### Mode Flèches
 | Touche | Action |
 |--------|--------|
 | **⬆️ Flèche Haut** | Déplacer la raquette vers le haut |
 | **⬇️ Flèche Bas** | Déplacer la raquette vers le bas |
-| **ESPACE** | Démarrer / Mettre en pause le jeu |
-| **R** | Réinitialiser le jeu (scores remis à 0) |
 
-### Exemple de jeu
+#### Mode Molette 🖱️
+| Action | Résultat |
+|--------|----------|
+| **🖱️ Scroll Haut** | Raquette monte |
+| **🖱️ Scroll Bas** | Raquette descend |
+
+#### Mode Hybride
+| Entrée | Action |
+|--------|--------|
+| **⬆️ Flèches OU 🖱️ Molette** | Contrôle au choix |
+
+#### Contrôles globaux
+| Touche | Action |
+|--------|--------|
+| **ESPACE** | Démarrer / Mettre en pause le jeu |
+| **R** | Retour au menu |
+
+### Exemple de jeu (Version Avancée)
+
+1. Ouvre `pong_advanced.html` dans ton navigateur
+2. **Au menu** :
+   - Sélectionne ton mode de contrôle (Flèches, Molette ou Hybride)
+   - Règle la difficulté (Facile/Normal/Difficile)
+   - Clique sur "▶️ JOUER"
+3. **En jeu** :
+   - Appuie sur **ESPACE** pour démarrer
+   - Utilise ton contrôle choisi pour déplacer la raquette
+   - Essaie de faire sortir la balle du côté droit (point pour toi !)
+4. **Retour** :
+   - Appuie sur **R** pour retourner au menu
+   - Les paramètres sont réinitialisés
+
+### Exemple de jeu (Version Basique)
 
 1. Ouvre `pong.html` dans ton navigateur
 2. Appuie sur **ESPACE** pour démarrer
@@ -275,7 +343,14 @@ ball.x = playerPaddle.x + playerPaddle.width + ball.radius;
 
 ---
 
-## 📚 Ressources utiles
+## 📚 Documentation
+
+- **README.md** (ce fichier) - Guide de démarrage rapide
+- **DOCUMENTATION_AVANCEE.md** 🆕 - Documentation complète des nouvelles fonctionnalités
+  - Détails sur le menu principal
+  - Explication des 3 modes de contrôle
+  - Architecture du code avancé
+  - Guide d'implémentation
 
 - **Canvas MDN** : https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
 - **requestAnimationFrame** : https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
