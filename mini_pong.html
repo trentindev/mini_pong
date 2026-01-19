@@ -400,20 +400,39 @@
             </div>
         </div>
 
+        <!-- SECTION SENSIBILITÉ MOLETTE -->
+        <div class="menu-section">
+            <div class="section-title">🖱️ Sensibilité Molette</div>
+
+            <div class="control-group">
+                <label class="control-option selected">
+                    <input type="radio" name="wheelMode" value="standard" checked>
+                    <span>Standard</span>
+                </label>
+                <div class="control-description">Déplacement par seuils (plus précis)</div>
+
+                <label class="control-option">
+                    <input type="radio" name="wheelMode" value="smooth">
+                    <span>Fluide</span>
+                </label>
+                <div class="control-description">Déplacement proportionnel à la vitesse de scroll (plus naturel)</div>
+            </div>
+        </div>
+
         <!-- SECTION DIFFICULTÉ -->
         <div class="menu-section">
             <div class="section-title">⚙️ Difficulté</div>
-            
+
             <div class="difficulty-group">
                 <label class="difficulty-label">
                     Vitesse de l'IA: <span class="difficulty-value" id="difficultyValue">Normal</span>
                 </label>
-                <input 
-                    type="range" 
-                    id="difficultySlider" 
-                    class="difficulty-slider" 
-                    min="1" 
-                    max="3" 
+                <input
+                    type="range"
+                    id="difficultySlider"
+                    class="difficulty-slider"
+                    min="1"
+                    max="3"
                     value="2"
                 >
                 <div class="difficulty-info">
@@ -483,7 +502,8 @@
         // Options utilisateur
         let gameSettings = {
             controlMode: 'arrows',  // 'arrows', 'wheel', ou 'hybrid'
-            difficulty: 2           // 1=facile, 2=normal, 3=difficile
+            difficulty: 2,          // 1=facile, 2=normal, 3=difficile
+            wheelMode: 'standard'   // 'standard' ou 'smooth'
         };
 
         // Mise à jour du texte de difficulté
@@ -501,6 +521,25 @@
                 // Mise à jour visuelle
                 document.querySelectorAll('.control-option').forEach(opt => {
                     opt.classList.remove('selected');
+                });
+                const parentLabel = e.target.parentElement;
+                if (parentLabel && parentLabel.classList.contains('control-option')) {
+                    parentLabel.classList.add('selected');
+                }
+            });
+        });
+
+        // Gestion du mode molette (radio buttons)
+        document.querySelectorAll('input[name="wheelMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                gameSettings.wheelMode = e.target.value;
+
+                // Mise à jour visuelle
+                document.querySelectorAll('input[name="wheelMode"]').forEach(r => {
+                    const parentLabel = r.parentElement;
+                    if (parentLabel && parentLabel.classList.contains('control-option')) {
+                        parentLabel.classList.remove('selected');
+                    }
                 });
                 const parentLabel = e.target.parentElement;
                 if (parentLabel && parentLabel.classList.contains('control-option')) {
@@ -657,16 +696,36 @@
 
             // --- Mouvement du joueur (Molette) ---
             if (gameSettings.controlMode === 'wheel' || gameSettings.controlMode === 'hybrid') {
-                if (wheelScroll < -50) {  // Scroll UP
-                    if (playerPaddle.y > 0) {
-                        playerPaddle.y -= playerPaddle.speed;
+                if (gameSettings.wheelMode === 'standard') {
+                    // Mode standard : par seuils (plus précis)
+                    if (wheelScroll < -50) {  // Scroll UP
+                        if (playerPaddle.y > 0) {
+                            playerPaddle.y -= playerPaddle.speed;
+                        }
+                        wheelScroll = 0;
+                    } else if (wheelScroll > 50) {  // Scroll DOWN
+                        if (playerPaddle.y + playerPaddle.height < canvas.height) {
+                            playerPaddle.y += playerPaddle.speed;
+                        }
+                        wheelScroll = 0;
                     }
-                    wheelScroll = 0;
-                } else if (wheelScroll > 50) {  // Scroll DOWN
-                    if (playerPaddle.y + playerPaddle.height < canvas.height) {
-                        playerPaddle.y += playerPaddle.speed;
+                } else if (gameSettings.wheelMode === 'smooth') {
+                    // Mode fluide : proportionnel à la vitesse de scroll
+                    if (Math.abs(wheelScroll) > 5) {
+                        const moveAmount = wheelScroll * 0.05; // Sensibilité ajustable
+                        const newY = playerPaddle.y + moveAmount;
+
+                        // Limiter aux bords du canvas
+                        playerPaddle.y = Math.max(0, Math.min(canvas.height - playerPaddle.height, newY));
+
+                        // Décroissance progressive pour un mouvement naturel
+                        wheelScroll *= 0.85;
+
+                        // Réinitialiser si trop petit
+                        if (Math.abs(wheelScroll) < 5) {
+                            wheelScroll = 0;
+                        }
                     }
-                    wheelScroll = 0;
                 }
             }
 
