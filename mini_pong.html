@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong - Mini Jeu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .info {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        canvas {
+            border: 3px solid white;
+            background: #000;
+            display: block;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            cursor: none;
+        }
+
+        .controls {
+            color: white;
+            margin-top: 15px;
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .score {
+            color: #4ade80;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 PONG</h1>
+        <div class="info">
+            <div class="score">Joueur: <span id="playerScore">0</span> | IA: <span id="iaScore">0</span></div>
+        </div>
+        <canvas id="pongCanvas" width="800" height="400"></canvas>
+        <div class="controls">
+            <p>⬆️ Flèche Haut / ⬇️ Flèche Bas pour contrôler la raquette</p>
+            <p>ESPACE pour démarrer | R pour réinitialiser</p>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * ============================================
+         * PONG - Jeu simple en vanilla JavaScript
+         * ============================================
+         * 
+         * Architecture générale:
+         * 1. Initialisation du canvas et contexte 2D
+         * 2. Définition des objets (balle, raquettes, scores)
+         * 3. Boucle de jeu avec requestAnimationFrame
+         * 4. Gestion des événements clavier
+         * 5. Logique de collision et de gameplay
+         */
+
+        // ============================================
+        // 1. INITIALISATION DU CANVAS
+        // ============================================
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Variables globales d'état
+        let gameRunning = false;
+
+        // ============================================
+        // 2. DÉFINITION DES OBJETS DU JEU
+        // ============================================
+
+        // Objet BALLE
+        const ball = {
+            x: canvas.width / 2,      // Position X (centre horizontal)
+            y: canvas.height / 2,     // Position Y (centre vertical)
+            radius: 8,                // Rayon en pixels
+            speedX: 5,                // Vitesse horizontale (pixels/frame)
+            speedY: 5,                // Vitesse verticale (pixels/frame)
+            maxSpeed: 8               // Limite de vitesse pour éviter l'accélération infinie
+        };
+
+        // Objet RAQUETTE JOUEUR (gauche)
+        const playerPaddle = {
+            x: 15,                    // 15px du bord gauche
+            y: canvas.height / 2 - 50, // Centrée verticalement
+            width: 10,
+            height: 100,
+            speed: 6,                 // Vitesse de déplacement
+            dy: 0                     // Direction verticale (sera modifiée par les touches)
+        };
+
+        // Objet RAQUETTE IA (droite)
+        const aiPaddle = {
+            x: canvas.width - 25,     // 25px du bord droit
+            y: canvas.height / 2 - 50,
+            width: 10,
+            height: 100,
+            speed: 4.5,               // Légèrement moins rapide que le joueur
+            dy: 0
+        };
+
+        // Objet SCORES
+        const score = {
+            player: 0,
+            ia: 0
+        };
+
+        // ============================================
+        // 3. GESTION DES ENTRÉES CLAVIER
+        // ============================================
+
+        // Objet pour tracker les touches enfoncées (permet le mouvement fluide)
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+
+            // ESPACE : démarrer/pause
+            if (e.key === ' ') {
+                e.preventDefault();
+                gameRunning = !gameRunning;
+            }
+
+            // R : réinitialiser le jeu
+            if (e.key.toLowerCase() === 'r') {
+                resetGame();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // ============================================
+        // 4. LOGIQUE DE JEU - MISE À JOUR (UPDATE)
+        // ============================================
+
+        function updateGame() {
+            if (!gameRunning) return;
+
+            // --- Mouvement du joueur ---
+            if (keys['ArrowUp'] && playerPaddle.y > 0) {
+                playerPaddle.y -= playerPaddle.speed;
+            }
+            if (keys['ArrowDown'] && playerPaddle.y + playerPaddle.height < canvas.height) {
+                playerPaddle.y += playerPaddle.speed;
+            }
+
+            // --- Mouvement de l'IA (simple) ---
+            // L'IA suit le centre de la balle
+            const aiPaddleCenter = aiPaddle.y + aiPaddle.height / 2;
+            const ballCenter = ball.y;
+
+            if (aiPaddleCenter < ballCenter - 35) {
+                // Balle au-dessus du centre de l'IA → descendre
+                if (aiPaddle.y + aiPaddle.height < canvas.height) {
+                    aiPaddle.y += aiPaddle.speed;
+                }
+            } else if (aiPaddleCenter > ballCenter + 35) {
+                // Balle en-dessous du centre de l'IA → monter
+                if (aiPaddle.y > 0) {
+                    aiPaddle.y -= aiPaddle.speed;
+                }
+            }
+
+            // --- Mouvement de la balle ---
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+
+            // --- Rebond sur les bords HAUT et BAS ---
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.speedY = -ball.speedY;
+                // Correction pour éviter que la balle ne dépasse le bord
+                ball.y = Math.max(ball.radius, Math.min(canvas.height - ball.radius, ball.y));
+            }
+
+            // --- Collision avec la raquette JOUEUR ---
+            if (
+                ball.x - ball.radius < playerPaddle.x + playerPaddle.width &&
+                ball.y > playerPaddle.y &&
+                ball.y < playerPaddle.y + playerPaddle.height &&
+                ball.speedX < 0  // La balle doit aller vers la gauche
+            ) {
+                ball.speedX = -ball.speedX;
+                // Ajouter un peu d'effet basé sur où la balle touche la raquette
+                const hitPos = (ball.y - playerPaddle.y) / playerPaddle.height - 0.5;
+                ball.speedY += hitPos * 4;
+                ball.x = playerPaddle.x + playerPaddle.width + ball.radius; // Éviter le "stuck"
+            }
+
+            // --- Collision avec la raquette IA ---
+            if (
+                ball.x + ball.radius > aiPaddle.x &&
+                ball.y > aiPaddle.y &&
+                ball.y < aiPaddle.y + aiPaddle.height &&
+                ball.speedX > 0  // La balle doit aller vers la droite
+            ) {
+                ball.speedX = -ball.speedX;
+                const hitPos = (ball.y - aiPaddle.y) / aiPaddle.height - 0.5;
+                ball.speedY += hitPos * 4;
+                ball.x = aiPaddle.x - ball.radius;
+            }
+
+            // --- Limiter la vitesse verticale ---
+            ball.speedY = Math.max(-ball.maxSpeed, Math.min(ball.maxSpeed, ball.speedY));
+
+            // --- Sortie de balle à GAUCHE (point à l'IA) ---
+            if (ball.x + ball.radius < 0) {
+                score.ia++;
+                resetBall();
+            }
+
+            // --- Sortie de balle à DROITE (point au joueur) ---
+            if (ball.x - ball.radius > canvas.width) {
+                score.player++;
+                resetBall();
+            }
+
+            // Mise à jour de l'affichage du score
+            updateScoreDisplay();
+        }
+
+        // ============================================
+        // 5. RENDU (DRAW)
+        // ============================================
+
+        function drawGame() {
+            // --- Effacer le canvas ---
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // --- Ligne du milieu (pointillée) ---
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // --- Dessiner la BALLE ---
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // --- Dessiner la raquette JOUEUR ---
+            ctx.fillStyle = '#4ade80';  // Vert
+            ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
+
+            // --- Dessiner la raquette IA ---
+            ctx.fillStyle = '#f87171';  // Rouge
+            ctx.fillRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height);
+
+            // --- Affichage des scores dans le canvas ---
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(score.player, canvas.width / 4, 40);
+            ctx.fillText(score.ia, (canvas.width * 3) / 4, 40);
+
+            // --- Affichage du statut de jeu ---
+            if (!gameRunning) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = 'bold 18px Arial';
+                ctx.fillText('⏸ Appuyez sur ESPACE pour commencer', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        // ============================================
+        // 6. BOUCLE PRINCIPALE (GAME LOOP)
+        // ============================================
+
+        function gameLoop() {
+            updateGame();  // Mise à jour de la logique
+            drawGame();    // Rendu à l'écran
+            requestAnimationFrame(gameLoop);  // Rappel au prochain frame (~60 fps)
+        }
+
+        // ============================================
+        // 7. FONCTIONS UTILITAIRES
+        // ============================================
+
+        function resetBall() {
+            // Remettre la balle au centre
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+
+            // Direction aléatoire douce
+            const angle = (Math.random() - 0.5) * 0.4;  // Angle entre -0.2 et +0.2 radians
+            const speed = 5;
+            ball.speedX = speed * Math.cos(angle) * (Math.random() > 0.5 ? 1 : -1);
+            ball.speedY = speed * Math.sin(angle);
+        }
+
+        function resetGame() {
+            score.player = 0;
+            score.ia = 0;
+            gameRunning = false;
+            resetBall();
+            updateScoreDisplay();
+            playerPaddle.y = canvas.height / 2 - 50;
+            aiPaddle.y = canvas.height / 2 - 50;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('playerScore').textContent = score.player;
+            document.getElementById('iaScore').textContent = score.ia;
+        }
+
+        // ============================================
+        // 8. DÉMARRAGE DU JEU
+        // ============================================
+
+        resetBall();
+        gameLoop();
+    </script>
+</body>
+</html>
