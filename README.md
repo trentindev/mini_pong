@@ -8,8 +8,7 @@ Ce projet vise à créer une **version simple et fonctionnelle du jeu Pong** en 
 
 | Fichier | Description |
 |---------|-------------|
-| **pong.html** | Version basique avec contrôles au clavier |
-| **pong_advanced.html** 🆕 | Version avancée avec menu et contrôles molette |
+| **mini_pong.html** | Version complète avec menu interactif et options avancées |
 
 ### Buts pédagogiques
 - Comprendre la **boucle de jeu** (`requestAnimationFrame`)
@@ -44,7 +43,7 @@ Ce projet vise à créer une **version simple et fonctionnelle du jeu Pong** en 
 - Thème sombre (fond noir du jeu)
 - Interface intuitive et épurée
 
-### Nouvelles fonctionnalités (Version Avancée) 🆕
+### Fonctionnalités avancées 🆕
 
 #### 🎮 Menu Principal Interactif
 - Écran d'accueil avec sélection de paramètres
@@ -55,6 +54,10 @@ Ce projet vise à créer une **version simple et fonctionnelle du jeu Pong** en 
 1. **Flèches Haut/Bas** - Contrôle précis au clavier
 2. **Molette de Souris** 🖱️ - Contrôle intuitif par scroll
 3. **Mode Hybride** - Utilisez flèches OU molette au choix
+
+#### 🖱️ Deux modes de sensibilité molette
+1. **Standard** - Déplacement par seuils (plus précis et prévisible)
+2. **Fluide** - Déplacement proportionnel à la vitesse de scroll avec inertie (plus naturel et réactif)
 
 #### ⚙️ Sélecteur de Difficulté
 - **Facile (🐢)** - IA à 3.5 px/frame
@@ -69,16 +72,24 @@ Ce projet vise à créer une **version simple et fonctionnelle du jeu Pong** en 
 
 ## 📁 Structure du fichier
 
-Le projet est livré sous la forme d'un **seul fichier autonome** : `pong.html`
+Le projet est livré sous la forme d'un **seul fichier autonome** : `mini_pong.html`
 
 ```
-pong.html
+mini_pong.html
 ├── HTML (structure de base)
+│   ├── Menu principal avec sections d'options
+│   └── Écran de jeu avec canvas
 ├── CSS (style et design)
+│   ├── Variables de couleur (gradient violet)
+│   ├── Styles du menu (glassmorphism)
+│   ├── Contrôles stylisés (radio buttons, sliders)
+│   └── Animations (fade-in, slide-in)
 └── JavaScript (logique du jeu)
+    ├── Gestion du menu
+    ├── Gestion des paramètres utilisateur
     ├── Initialisation
     ├── Objets du jeu (balle, raquettes, scores)
-    ├── Gestion des entrées
+    ├── Gestion des entrées (clavier + molette)
     ├── Boucle de mise à jour (updateGame)
     ├── Rendu (drawGame)
     └── Fonctions utilitaires
@@ -90,11 +101,12 @@ pong.html
 
 ## ⌨️ Commandes de Jeu
 
-### Menu Principal (Version Avancée)
+### Menu Principal
 
 | Action | Étape |
 |--------|-------|
 | **Choisir contrôles** | Cliquer sur une option (Flèches/Molette/Hybride) |
+| **Choisir sensibilité molette** | Cliquer sur Standard ou Fluide |
 | **Régler difficulté** | Glisser le curseur (Facile ↔ Difficile) |
 | **Lancer le jeu** | Cliquer sur le bouton "▶️ JOUER" |
 
@@ -112,6 +124,8 @@ pong.html
 | **🖱️ Scroll Haut** | Raquette monte |
 | **🖱️ Scroll Bas** | Raquette descend |
 
+**Note** : Avec le mode **Fluide**, la vitesse de déplacement est proportionnelle à la vitesse de scroll, offrant une expérience plus naturelle et réactive. Le mode **Standard** utilise des seuils fixes pour un contrôle plus précis.
+
 #### Mode Hybride
 | Entrée | Action |
 |--------|--------|
@@ -123,11 +137,12 @@ pong.html
 | **ESPACE** | Démarrer / Mettre en pause le jeu |
 | **R** | Retour au menu |
 
-### Exemple de jeu (Version Avancée)
+### Exemple de jeu
 
-1. Ouvre `pong_advanced.html` dans ton navigateur
+1. Ouvre `mini_pong.html` dans ton navigateur
 2. **Au menu** :
    - Sélectionne ton mode de contrôle (Flèches, Molette ou Hybride)
+   - Choisis la sensibilité de la molette (Standard ou Fluide)
    - Règle la difficulté (Facile/Normal/Difficile)
    - Clique sur "▶️ JOUER"
 3. **En jeu** :
@@ -136,15 +151,7 @@ pong.html
    - Essaie de faire sortir la balle du côté droit (point pour toi !)
 4. **Retour** :
    - Appuie sur **R** pour retourner au menu
-   - Les paramètres sont réinitialisés
-
-### Exemple de jeu (Version Basique)
-
-1. Ouvre `pong.html` dans ton navigateur
-2. Appuie sur **ESPACE** pour démarrer
-3. Utilise les **flèches haut/bas** pour contrôler ta raquette (verte, à gauche)
-4. Essaie de faire sortir la balle du côté droit (point pour toi !)
-5. Appuie sur **R** pour recommencer
+   - Change tes paramètres et recommence !
 
 ---
 
@@ -169,15 +176,29 @@ pong.html
 
 ## 💻 Code - Architecture générale
 
-Le code JavaScript est divisé en **8 sections logiques** commentées :
+Le code JavaScript est divisé en plusieurs sections logiques commentées :
 
-### 1. Initialisation du Canvas
+### 1. Gestion du Menu
+```javascript
+const gameSettings = {
+    controlMode: 'arrows',  // 'arrows', 'wheel', 'hybrid'
+    difficulty: 2,          // 1=facile, 2=normal, 3=difficile
+    wheelMode: 'standard'   // 'standard' ou 'smooth'
+};
+```
+
+### 2. Gestion des événements du menu
+- Écouteurs pour les radio buttons (contrôles, sensibilité molette)
+- Slider de difficulté
+- Boutons "Jouer" et "Retour au menu"
+
+### 3. Initialisation du Canvas
 ```javascript
 const canvas = document.getElementById('pongCanvas');
 const ctx = canvas.getContext('2d');
 ```
 
-### 2. Définition des objets
+### 4. Définition des objets
 ```javascript
 const ball = { x, y, radius, speedX, speedY, maxSpeed };
 const playerPaddle = { x, y, width, height, speed };
@@ -185,29 +206,34 @@ const aiPaddle = { x, y, width, height, speed };
 const score = { player, ia };
 ```
 
-### 3. Gestion des entrées
+### 5. Gestion des entrées
 ```javascript
 keys = {};  // Dictionnaire global des touches enfoncées
+let wheelScroll = 0;  // Accumule les mouvements de molette
+
 window.addEventListener('keydown', ...);
 window.addEventListener('keyup', ...);
+window.addEventListener('wheel', ...);  // Mode molette
 ```
 
-### 4. Boucle de mise à jour (`updateGame()`)
-- Déplacement du joueur
+### 6. Boucle de mise à jour (`updateGame()`)
+- Déplacement du joueur (flèches ou molette selon le mode)
+  - Mode Standard : déplacement par seuils
+  - Mode Fluide : déplacement proportionnel avec inertie
 - IA suivant la balle
 - Mouvement de la balle
 - Collisions avec les bords
 - Collisions avec les raquettes
 - Détection des points
 
-### 5. Rendu (`drawGame()`)
+### 7. Rendu (`drawGame()`)
 - Effacement du canvas
 - Dessin de la balle
 - Dessin des raquettes
 - Affichage des scores
 - Affichage du statut (pause/jeu)
 
-### 6. Boucle principale
+### 8. Boucle principale
 ```javascript
 function gameLoop() {
     updateGame();  // Logique
@@ -216,13 +242,14 @@ function gameLoop() {
 }
 ```
 
-### 7. Fonctions utilitaires
+### 9. Fonctions utilitaires
+- `startGame()` : initialise le jeu avec les paramètres choisis
 - `resetBall()` : réinitialise la balle au centre avec direction aléatoire
 - `resetGame()` : réinitialise les scores et l'état du jeu
+- `updateScoreDisplay()` : met à jour l'affichage des scores
 
-### 8. Démarrage
+### 10. Démarrage
 ```javascript
-resetBall();
 gameLoop();  // Lance la boucle infinie
 ```
 
@@ -262,6 +289,19 @@ if (aiPaddleCenter < ballCenter - 35) {
 ```
 La raquette IA suit le centre de la balle avec une zone "morte" de ±35px.
 
+### Contrôle de la molette (Mode Fluide)
+```javascript
+if (gameSettings.wheelMode === 'smooth') {
+    if (Math.abs(wheelScroll) > 5) {
+        const moveAmount = wheelScroll * 0.05;  // Sensibilité
+        playerPaddle.y = Math.max(0, Math.min(canvas.height - playerPaddle.height,
+                                               playerPaddle.y + moveAmount));
+        wheelScroll *= 0.85;  // Décroissance progressive (inertie)
+    }
+}
+```
+Le mode fluide utilise une décroissance progressive pour créer un effet d'inertie naturel, rendant les mouvements plus réactifs à la vitesse de scroll.
+
 ---
 
 ## 🎨 Personnalisation
@@ -294,11 +334,13 @@ canvas.height = 400;         // Hauteur du canvas
 
 - 🔊 **Sons** : Ajouter des effets sonores (rebonds, points)
 - ✨ **Particules** : Animations de collision
-- 📊 **Difficulté progressive** : Augmente la vitesse de la balle
+- 📊 **Difficulté progressive** : Augmente la vitesse de la balle au fil du jeu
 - 🤖 **IA avancée** : Prédiction de trajectoire
 - 🎮 **Deux joueurs** : Mode multijoueur local
-- 📱 **Responsive** : Adapter le jeu aux mobiles
+- 📱 **Responsive** : Adapter le jeu aux mobiles (tactile)
 - 🎯 **Modes de jeu** : Entraînement, arcade, challenge
+- 💾 **Sauvegarde** : Sauvegarder les préférences et meilleurs scores (localStorage)
+- 🎨 **Thèmes** : Choix de différents thèmes de couleurs
 
 ---
 
@@ -317,6 +359,16 @@ window.addEventListener('keyup', (e) => keys[e.key] = false);
 ```
 Permet le **mouvement multidirectionnel fluide**. Avec `keypress` seul, le mouvement serait saccadé.
 
+### Gestion de la molette
+```javascript
+window.addEventListener('wheel', (e) => {
+    if (!menuScreen.classList.contains('hidden')) return;
+    e.preventDefault();
+    wheelScroll += e.deltaY;
+}, { passive: false });
+```
+L'événement `wheel` capture le scroll. Le flag `passive: false` permet d'utiliser `preventDefault()` pour empêcher le scroll de la page pendant le jeu.
+
 ### Canvas 2D API
 - `fillRect()` : dessiner des rectangles (raquettes)
 - `arc()` : dessiner des cercles (balle)
@@ -328,8 +380,21 @@ Permet le **mouvement multidirectionnel fluide**. Avec `keypress` seul, le mouve
 ## 🔧 Dépannage
 
 ### Le jeu ne se lance pas
-- Vériffe que tu ouvres `pong.html` dans un **navigateur moderne** (Chrome, Firefox, Edge, Safari)
+- Vérifie que tu ouvres `mini_pong.html` dans un **navigateur moderne** (Chrome, Firefox, Edge, Safari)
 - Vérifie la **console du navigateur** (F12) pour les erreurs
+
+### Le menu ne s'affiche pas
+- Vérifie que JavaScript est activé dans ton navigateur
+- Essaie de rafraîchir la page (F5)
+
+### La molette ne fonctionne pas
+- Assure-toi d'avoir sélectionné un mode incluant la molette (Molette ou Hybride)
+- Le jeu doit être lancé (appuie sur ESPACE)
+- Essaie les deux modes de sensibilité (Standard/Fluide)
+
+### Le mode fluide est trop rapide/lent
+- Ajuste la sensibilité en modifiant la valeur `0.05` dans le code (ligne ~669)
+- Ajuste la décroissance en modifiant `0.85` (ligne ~676)
 
 ### La balle se coince dans la raquette
 - C'est normal avec une détection simple. Le code corrige ça avec :
@@ -338,23 +403,18 @@ ball.x = playerPaddle.x + playerPaddle.width + ball.radius;
 ```
 
 ### L'IA est trop facile/difficile
-- Augmente/diminue `aiPaddle.speed`
-- Réduis/augmente la "zone morte" (actuellement ±35px)
+- Change la difficulté dans le menu avant de lancer le jeu
+- Ou modifie directement `aiPaddle.speed` dans le code
 
 ---
 
-## 📚 Documentation
+## 📚 Documentation et Ressources
 
-- **README.md** (ce fichier) - Guide de démarrage rapide
-- **DOCUMENTATION_AVANCEE.md** 🆕 - Documentation complète des nouvelles fonctionnalités
-  - Détails sur le menu principal
-  - Explication des 3 modes de contrôle
-  - Architecture du code avancé
-  - Guide d'implémentation
-
+- **README.md** (ce fichier) - Guide complet du jeu
 - **Canvas MDN** : https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
 - **requestAnimationFrame** : https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
 - **Game Loop Pattern** : https://gamedev.stackexchange.com/questions/15383/how-do-i-make-a-proper-game-loop
+- **Wheel Event** : https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event
 
 ---
 
