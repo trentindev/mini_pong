@@ -134,12 +134,12 @@
             accent-color: var(--accent-green);
         }
 
-        .control-option input[type="radio"]:checked + label {
+        .control-option input[type="radio"]:checked + span {
             color: var(--accent-green);
             font-weight: bold;
         }
 
-        .control-option label {
+        .control-option span {
             flex: 1;
             cursor: pointer;
             font-size: 1rem;
@@ -286,7 +286,7 @@
 
         .game-container {
             text-align: center;
-            display: none;
+            display: block;
         }
 
         .game-header {
@@ -382,19 +382,19 @@
             <div class="control-group">
                 <label class="control-option selected">
                     <input type="radio" name="controls" value="arrows" checked>
-                    <label for="control-arrows">Flèches Haut/Bas</label>
+                    <span>Flèches Haut/Bas</span>
                 </label>
                 <div class="control-description">Déplacez votre raquette avec ⬆️ et ⬇️</div>
 
                 <label class="control-option">
                     <input type="radio" name="controls" value="wheel">
-                    <label for="control-wheel">Molette de Souris</label>
+                    <span>Molette de Souris</span>
                 </label>
                 <div class="control-description">Scrollez vers le haut/bas pour bouger</div>
 
                 <label class="control-option">
                     <input type="radio" name="controls" value="hybrid">
-                    <label for="control-hybrid">Flèches + Molette</label>
+                    <span>Flèches + Molette</span>
                 </label>
                 <div class="control-description">Utilisez l'un ou l'autre, c'est vous qui choisissez</div>
             </div>
@@ -433,7 +433,7 @@
     <!-- ============================================
          ÉCRAN DE JEU
          ============================================ -->
-    <div id="gameScreen" class="game-container">
+    <div id="gameScreen" class="game-container hidden">
         <div class="game-header">
             <h2>🎮 PONG</h2>
             <div class="control-display" id="controlDisplay"></div>
@@ -487,7 +487,7 @@
         };
 
         // Mise à jour du texte de difficulté
-        difficultySlider.addEventListener('change', (e) => {
+        difficultySlider.addEventListener('input', (e) => {
             const values = ['🐢 Facile', '🎯 Normal', '🐇 Difficile'];
             difficultyValue.textContent = values[e.target.value - 1];
             gameSettings.difficulty = parseInt(e.target.value);
@@ -502,7 +502,10 @@
                 document.querySelectorAll('.control-option').forEach(opt => {
                     opt.classList.remove('selected');
                 });
-                e.target.closest('.control-option').classList.add('selected');
+                const parentLabel = e.target.parentElement;
+                if (parentLabel && parentLabel.classList.contains('control-option')) {
+                    parentLabel.classList.add('selected');
+                }
             });
         });
 
@@ -592,11 +595,15 @@
             keys[e.key] = false;
         });
 
-        // Molette de souris
-        canvas.addEventListener('wheel', (e) => {
+        // Molette de souris - Ajout de l'écouteur sur window plutôt que canvas
+        window.addEventListener('wheel', (e) => {
+            // Ne prendre en compte que si le jeu est actif
+            if (!menuScreen.classList.contains('hidden')) {
+                return;
+            }
             e.preventDefault();
             wheelScroll += e.deltaY;  // Accumule les valeurs
-        });
+        }, { passive: false });
 
         // ============================================
         // FONCTION DE DÉMARRAGE DU JEU
